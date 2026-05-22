@@ -13,6 +13,12 @@ import tschipp.carryon.networking.PacketBase;
 
 public record ClientboundSyncCarryDataPacket(int iden, CarryOnData data) implements PacketBase {
 
+    public ClientboundSyncCarryDataPacket {
+        if (data == null) {
+            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+        }
+    }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundSyncCarryDataPacket> CODEC = StreamCodec.composite(
             ByteBufCodecs.INT, ClientboundSyncCarryDataPacket::iden,
             CarryOnData.STREAM_CODEC, ClientboundSyncCarryDataPacket::data,

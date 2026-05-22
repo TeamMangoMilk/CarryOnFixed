@@ -111,11 +111,25 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public CarryOnData getCarryData(Player player) {
-        return player.getData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT);
+        if (player == null) {
+            return new CarryOnData(new net.minecraft.nbt.CompoundTag());
+        }
+        CarryOnData data = player.getData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT);
+        if (data == null) {
+            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            player.setData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT, data);
+        }
+        return data;
     }
 
     @Override
     public void setCarryData(Player player, CarryOnData data) {
+        if (player == null) {
+            return;
+        }
+        if (data == null) {
+            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+        }
         player.setData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT, data);
         if(!player.level().isClientSide) {
             sendPacketToAllPlayers(Constants.PACKET_ID_SYNC_CARRY_ON_DATA, new ClientboundSyncCarryDataPacket(player.getId(), data), (ServerLevel) player.level());
