@@ -85,7 +85,9 @@ public abstract class EntityMixin
 			{
 				carry.clear();
 				CarryOnDataManager.setCarryData(thisPlayer, carry);
-				Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), (ServerPlayer) thisPlayer);
+				if (thisPlayer instanceof ServerPlayer serverPlayer) {
+					Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), serverPlayer);
+				}
 			}
 		}
 	}
