@@ -56,7 +56,7 @@ public class CommandCarryOn
 
 				.then(Commands.literal("clear").then(Commands.argument("target", EntityArgument.players()).requires(src -> src.hasPermission(2)).executes(cmd -> handleClear(cmd.getSource(), EntityArgument.getPlayers(cmd, "target")))))
 
-				.then(Commands.literal("place").requires(src -> src.hasPermission(2)).executes(cmd -> handlePlace(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()))))
+				.then(Commands.literal("place").executes(cmd -> handlePlace(cmd.getSource(), Collections.singleton(cmd.getSource().getPlayerOrException()))))
 
 				.then(Commands.literal("place").then(Commands.argument("target", EntityArgument.players()).requires(src -> src.hasPermission(2)).executes(cmd -> handlePlace(cmd.getSource(), EntityArgument.getPlayers(cmd, "target")))))
 
