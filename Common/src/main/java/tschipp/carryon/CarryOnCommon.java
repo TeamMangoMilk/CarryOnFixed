@@ -235,11 +235,16 @@ public class CarryOnCommon
 
 	public static boolean hasBackpackPassenger(Entity entity)
 	{
-		if (entity == null)
+		return hasBackpackPassenger(entity, new java.util.HashSet<>());
+	}
+
+	private static boolean hasBackpackPassenger(Entity entity, java.util.Set<Entity> visited)
+	{
+		if (entity == null || !visited.add(entity))
 			return false;
 		for (Entity passenger : entity.getPassengers())
 		{
-			if (isBackpackOrSimilar(passenger) || hasBackpackPassenger(passenger))
+			if (isBackpackOrSimilar(passenger) || hasBackpackPassenger(passenger, visited))
 			{
 				return true;
 			}

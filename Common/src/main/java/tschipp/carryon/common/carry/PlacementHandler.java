@@ -372,12 +372,14 @@ public class PlacementHandler
 	private static int getPassengerCount(Entity entity)
 	{
 		int passengers = 0;
-		while (entity.isVehicle()) {
+		int guard = 0;
+		while (entity.isVehicle() && guard < 100) {
 			List<Entity> pass = entity.getPassengers();
 			if (!pass.isEmpty()) {
 				entity = pass.get(0);
 				passengers++;
 			}
+			guard++;
 		}
 
 		return passengers;
@@ -386,12 +388,14 @@ public class PlacementHandler
 	private static Entity getTopPassenger(Entity entity)
 	{
 		Entity top = entity;
-		while (entity.isVehicle()) {
+		int guard = 0;
+		while (entity.isVehicle() && guard < 100) {
 			List<Entity> pass = entity.getPassengers();
 			if (!pass.isEmpty()) {
 				entity = pass.get(0);
 				top = entity;
 			}
+			guard++;
 		}
 
 		return top;
