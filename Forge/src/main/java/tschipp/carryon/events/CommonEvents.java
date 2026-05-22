@@ -245,7 +245,7 @@ public class CommonEvents
 	@SubscribeEvent
 	public static void onStartTracking(PlayerEvent.StartTracking event) {
 		if(event.getEntity() instanceof ServerPlayer sp && event.getTarget() instanceof ServerPlayer target) {
-			Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_SYNC_CARRY_ON_DATA, new ClientboundSyncCarryDataPacket(sp.getId(), CarryOnDataManager.getCarryData(sp)), target);
+			Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_SYNC_CARRY_ON_DATA, new ClientboundSyncCarryDataPacket(target.getId(), CarryOnDataManager.getCarryData(target)), sp);
 		}
 	}
 
