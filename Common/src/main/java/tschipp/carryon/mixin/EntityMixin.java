@@ -40,6 +40,7 @@ import tschipp.carryon.common.carry.CarryOnData;
 import tschipp.carryon.common.carry.CarryOnData.CarryType;
 import tschipp.carryon.common.carry.CarryOnDataManager;
 import tschipp.carryon.networking.clientbound.ClientboundStartRidingPacket;
+import tschipp.carryon.networking.clientbound.ClientboundStartRidingOtherPlayerPacket;
 import tschipp.carryon.platform.Services;
 
 @Mixin(Entity.class)
@@ -60,15 +61,33 @@ public abstract class EntityMixin
 	@Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
 	private void onPositionPassenger(Entity entity, MoveFunction move, CallbackInfo ci)
 	{
-		if((Object)this instanceof Player thisPlayer && entity instanceof Player otherPlayer)
+		if((Object)this instanceof Player thisPlayer)
 		{
-			if(hasPassenger(otherPlayer) && CarryOnDataManager.getCarryData(thisPlayer).isCarrying(CarryType.PLAYER))
+			if(entity instanceof Player otherPlayer && hasPassenger(otherPlayer) && CarryOnDataManager.getCarryData(thisPlayer).isCarrying(CarryType.PLAYER))
 			{
 				Vec3 forward = new Vec3(0, 0, 0.6);
 				Vec3 otherPos = thisPlayer.position().add(forward.yRot((float) Math.toRadians(-thisPlayer.yBodyRot)));
 				otherPos = otherPos.add(0, 0.4,0);
 				move.accept(otherPlayer, otherPos.x, otherPos.y, otherPos.z);
 				((Entity)((Object)this)).onPassengerTurned(otherPlayer);
+				ci.cancel();
+			}
+			else if (hasPassenger(entity))
+			{
+				double height = thisPlayer.getBbHeight();
+				if (thisPlayer.isShiftKeyDown() || thisPlayer.isCrouching()) {
+					height -= 0.25;
+				}
+				Vec3 pos = thisPlayer.position().add(0, height, 0);
+				move.accept(entity, pos.x, pos.y, pos.z);
+
+				entity.setYRot(thisPlayer.getYRot());
+				entity.yRotO = thisPlayer.yRotO;
+				entity.setYHeadRot(thisPlayer.getYHeadRot());
+				if (entity instanceof LivingEntity livingPassenger) {
+					livingPassenger.yBodyRot = thisPlayer.yBodyRot;
+					livingPassenger.yBodyRotO = thisPlayer.yBodyRotO;
+				}
 				ci.cancel();
 			}
 		}
@@ -81,15 +100,17 @@ public abstract class EntityMixin
 		if((Object)this instanceof Player thisPlayer && living instanceof Player otherPlayer)
 		{
 			CarryOnData carry = CarryOnDataManager.getCarryData(thisPlayer);
-			if(carry.isCarrying(CarryType.PLAYER))
+			boolean wasCarrying = carry.isCarrying(CarryType.PLAYER);
+			if(wasCarrying)
 			{
 				carry.clear();
 				CarryOnDataManager.setCarryData(thisPlayer, carry);
-				if (thisPlayer instanceof ServerPlayer serverPlayer) {
-					Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), serverPlayer);
-					if (!serverPlayer.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
-						serverPlayer.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
-					}
+			}
+			if (thisPlayer instanceof ServerPlayer serverPlayer) {
+				Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), serverPlayer);
+				Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(serverPlayer.getId(), otherPlayer.getId(), false), serverPlayer.serverLevel());
+				if (wasCarrying && (!serverPlayer.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)) {
+					serverPlayer.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
 				}
 			}
 		}

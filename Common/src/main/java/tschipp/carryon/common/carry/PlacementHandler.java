@@ -267,6 +267,10 @@ public class PlacementHandler
 						entityHeld.startRiding(topEntity, false);
 					}
 
+					if (entityHeld instanceof ServerPlayer || topEntity instanceof ServerPlayer) {
+						Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(topEntity.getId(), entityHeld.getId(), true), player.serverLevel());
+					}
+
 					if (carry.getActiveScript().isPresent()) {
 						ScriptEffects effects = carry.getActiveScript().get().scriptEffects();
 						String cmd = effects.commandPlace();

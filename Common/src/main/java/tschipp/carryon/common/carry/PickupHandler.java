@@ -74,8 +74,9 @@ public class PickupHandler {
         if(!carry.isKeyPressed())
             return false;
 
-        //Needed so that we don't pick up and place in the same tick
-        if(player.tickCount == carry.getTick())
+        //Needed so that we don't pick up and place in the same tick / accidental consecutive clicks (10-tick placement cooldown)
+        int lastTick = carry.getTick();
+        if (lastTick != -1 && player.tickCount - lastTick < 10)
             return false;
 
         if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR || player.gameMode.getGameModeForPlayer() == GameType.ADVENTURE)
