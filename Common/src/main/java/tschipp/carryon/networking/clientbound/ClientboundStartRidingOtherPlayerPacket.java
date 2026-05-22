@@ -25,6 +25,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import tschipp.carryon.Constants;
 import tschipp.carryon.networking.PacketBase;
 
@@ -37,7 +38,7 @@ public record ClientboundStartRidingOtherPlayerPacket(int mount, int rider, bool
 			ClientboundStartRidingOtherPlayerPacket::new
 	);
 
-	public static final Type<ClientboundStartRidingOtherPlayerPacket> TYPE = new Type<>(Constants.PACKET_ID_START_RIDING_OTHER);
+	public static final CustomPacketPayload.Type<ClientboundStartRidingOtherPlayerPacket> TYPE = new CustomPacketPayload.Type<>(Constants.PACKET_ID_START_RIDING_OTHER);
 
 	@Override
 	public void handle(Player player)

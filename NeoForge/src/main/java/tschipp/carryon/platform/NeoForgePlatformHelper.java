@@ -33,7 +33,6 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-import tschipp.carryon.CarryOnCommonClient;
 import tschipp.carryon.CarryOnNeoForge;
 import tschipp.carryon.CarryOnNeoForgeClient;
 import tschipp.carryon.Constants;
@@ -91,7 +90,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
         IPayloadHandler<T> clientHandler = (packet, ctx) -> {
             ctx.enqueueWork(() -> {
-                handler.accept(packet, CarryOnCommonClient.getPlayer());
+                handler.accept(packet, ctx.player());
             });
         };
 
