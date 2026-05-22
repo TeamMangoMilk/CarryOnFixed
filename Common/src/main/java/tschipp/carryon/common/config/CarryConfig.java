@@ -279,7 +279,27 @@ public class CarryConfig
 					"modern_industrialization:*_item_pipe",
 					"modern_industrialization:fluid_pipe",
 					"modern_industrialization:*_fluid_pipe",
-					"snowrealmagic:*"
+					"snowrealmagic:*",
+					"tfmg:*",
+					"waterframes:*",
+					"extradisks:*",
+					"gravestone:*",
+					"tombstone:*",
+					"ae2:*",
+					"appeng:*",
+					"megacells:*",
+					"mekanism:*",
+					"mekanismgenerators:*",
+					"thermal:*",
+					"enderio:*",
+					"pneumaticcraft:*",
+					"computercraft:*",
+					"ad_astra:*",
+					"integrateddynamics:*",
+					"rftools*:*",
+					"bloodmagic:*",
+					"trainutilities:*",
+					"pantographsandwires:*"
 			};
 
 			@Property(
