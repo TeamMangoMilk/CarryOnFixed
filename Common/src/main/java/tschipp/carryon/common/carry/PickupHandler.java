@@ -163,6 +163,9 @@ public class PickupHandler {
         if(!canCarryGeneral(player, entity.position()))
             return false;
 
+        if (CarryOnCommon.isBackpackOrSimilar(entity) || CarryOnCommon.hasBackpackPassenger(entity))
+            return false;
+
         if (entity.invulnerableTime != 0)
             return false;
 

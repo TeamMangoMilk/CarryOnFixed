@@ -41,6 +41,7 @@ import tschipp.carryon.common.carry.CarryOnData.CarryType;
 import tschipp.carryon.common.carry.CarryOnDataManager;
 import tschipp.carryon.networking.clientbound.ClientboundStartRidingPacket;
 import tschipp.carryon.networking.clientbound.ClientboundStartRidingOtherPlayerPacket;
+import tschipp.carryon.CarryOnCommon;
 import tschipp.carryon.platform.Services;
 
 @Mixin(Entity.class)
@@ -61,6 +62,9 @@ public abstract class EntityMixin
 	@Inject(method = "positionRider(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/entity/Entity$MoveFunction;)V", at = @At("HEAD"), cancellable = true)
 	private void onPositionPassenger(Entity entity, MoveFunction move, CallbackInfo ci)
 	{
+		if (CarryOnCommon.isBackpackOrSimilar(entity))
+			return;
+
 		if((Object)this instanceof Player thisPlayer)
 		{
 			if(entity instanceof Player otherPlayer && hasPassenger(otherPlayer) && CarryOnDataManager.getCarryData(thisPlayer).isCarrying(CarryType.PLAYER))

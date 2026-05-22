@@ -43,6 +43,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import tschipp.carryon.CarryOnCommon;
 import tschipp.carryon.Constants;
 import tschipp.carryon.common.carry.CarryOnData.CarryType;
 import tschipp.carryon.common.config.ListHandler;
@@ -236,6 +237,8 @@ public class PlacementHandler
 		double sizeHeldEntity = entityHeld.getBbHeight() * entityHeld.getBbWidth();
 		double distance = entityClicked.blockPosition().distSqr(player.blockPosition());
 		Entity lowestEntity = entityClicked.getRootVehicle();
+		if (CarryOnCommon.isBackpackOrSimilar(lowestEntity) || CarryOnCommon.hasBackpackPassenger(lowestEntity))
+			return;
 		int numPassengers = getPassengerCount(lowestEntity);
 		if (numPassengers < Constants.COMMON_CONFIG.settings.maxEntityStackLimit - 1) {
 			Entity topEntity = getTopPassenger(lowestEntity);

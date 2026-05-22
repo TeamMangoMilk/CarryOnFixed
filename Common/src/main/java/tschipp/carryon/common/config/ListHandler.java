@@ -52,6 +52,14 @@ public class ListHandler {
 
     private static Set<Property<?>> PROPERTY_EXCEPTION_CLASSES = new HashSet<>();
 
+    private static Set<String> BACK_ITEMS = new HashSet<>();
+    private static List<TagKey<EntityType<?>>> BACK_ITEMS_TAGS = new ArrayList<>();
+
+    public static boolean isBackItem(Entity entity)
+    {
+        return doCheck(entity, BACK_ITEMS, BACK_ITEMS_TAGS);
+    }
+
     public static boolean isPermitted(Block block)
     {
         if(Constants.COMMON_CONFIG.settings.useWhitelistBlocks)
@@ -118,6 +126,8 @@ public class ListHandler {
         ALLOWED_TILES.clear();
         ALLOWED_TILES_TAGS.clear();
         PROPERTY_EXCEPTION_CLASSES.clear();
+        BACK_ITEMS.clear();
+        BACK_ITEMS_TAGS.clear();
 
         Map<ResourceLocation, TagKey<Block>> blocktags = BuiltInRegistries.BLOCK.getTagNames().collect(Collectors.toMap(t -> t.location(), t -> t));
         Map<ResourceLocation, TagKey<EntityType<?>>> entitytags = BuiltInRegistries.ENTITY_TYPE.getTagNames().collect(Collectors.toMap(t -> t.location(), t -> t));
@@ -145,6 +155,9 @@ public class ListHandler {
         List<String> allowedStacking = new ArrayList<>(List.of(Constants.COMMON_CONFIG.whitelist.allowedStacking));
         allowedStacking.add("#carryon:stacking_whitelist");
         addWithWildcards(allowedStacking, ALLOWED_STACKING, BuiltInRegistries.ENTITY_TYPE, entitytags, ALLOWED_STACKING_TAGS);
+
+        List<String> backItems = new ArrayList<>(List.of(Constants.COMMON_CONFIG.settings.backItems));
+        addWithWildcards(backItems, BACK_ITEMS, BuiltInRegistries.ENTITY_TYPE, entitytags, BACK_ITEMS_TAGS);
 
         for(String propString : Constants.COMMON_CONFIG.settings.placementStateExceptions)
         {

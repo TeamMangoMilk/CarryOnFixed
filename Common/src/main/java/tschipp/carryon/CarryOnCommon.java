@@ -221,4 +221,29 @@ public class CarryOnCommon
 		}
 		return 0;
 	}
+
+	public static boolean isBackpackOrSimilar(Entity entity)
+	{
+		if (entity == null)
+			return false;
+		try {
+			return tschipp.carryon.common.config.ListHandler.isBackItem(entity);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public static boolean hasBackpackPassenger(Entity entity)
+	{
+		if (entity == null)
+			return false;
+		for (Entity passenger : entity.getPassengers())
+		{
+			if (isBackpackOrSimilar(passenger) || hasBackpackPassenger(passenger))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 }

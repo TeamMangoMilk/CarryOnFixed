@@ -194,6 +194,31 @@ public class CarryConfig
                     description = "Whether players in Survival Mode can pick up unbreakable blocks. Creative players always can."
             )
             public boolean pickupUnbreakableBlocks = false;
+
+            @Property(
+                    type = PropertyType.STRING_ARRAY,
+                    description = "Entities or mod namespaces that are used as worn back-items or rendering helper entities. These entities will be ignored by CarryOn's passenger positioning system (allowing them to render correctly on the back), and they will automatically block carrying the entity wearing them or stacking entities on top of them. Format: modid:entity_id, modid:*, or wildcard matching."
+            )
+            public String[] backItems = {
+                    "fxntstorage:*",
+                    "create_jetpack:*",
+                    "create:copper_backtank",
+                    "create:netherite_backtank",
+                    "create:creative_backtank",
+                    "sophisticatedbackpacks:*",
+                    "travelersbackpack:*",
+                    "backpacked:*",
+                    "wearablebackpacks:*",
+                    "usefulbackpacks:*",
+                    "simplybackpacks:*",
+                    "inmis:*",
+                    "improvedbackpacks:*",
+                    "packedup:*",
+                    "adventurebackpack:*",
+                    "curiouselytra:*",
+                    "colytra:*",
+                    "quark:backpack"
+            };
         }
 
 		@Property(
