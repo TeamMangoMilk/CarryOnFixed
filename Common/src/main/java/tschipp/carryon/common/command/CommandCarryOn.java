@@ -129,6 +129,9 @@ public class CommandCarryOn
 			CarryOnData carry = CarryOnDataManager.getCarryData(player);
 			carry.clear();
 			CarryOnDataManager.setCarryData(player, carry);
+			if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
+				player.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+			}
 
 			cleared++;
 		}

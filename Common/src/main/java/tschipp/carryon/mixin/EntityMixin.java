@@ -87,6 +87,9 @@ public abstract class EntityMixin
 				CarryOnDataManager.setCarryData(thisPlayer, carry);
 				if (thisPlayer instanceof ServerPlayer serverPlayer) {
 					Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), serverPlayer);
+					if (!serverPlayer.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
+						serverPlayer.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+					}
 				}
 			}
 		}

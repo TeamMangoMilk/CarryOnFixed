@@ -277,6 +277,9 @@ public class PlacementHandler
 					player.swing(InteractionHand.MAIN_HAND, true);
 					carry.clear();
 					CarryOnDataManager.setCarryData(player, carry);
+					if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
+						player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+					}
 					level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.HORSE_SADDLE, SoundSource.PLAYERS, 0.5F, 1.5F);
 				} else {
 					level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.LAVA_POP, SoundSource.PLAYERS, 0.5F, 0.5F);
@@ -321,6 +324,9 @@ public class PlacementHandler
 		}
 		carry.clear();
 		CarryOnDataManager.setCarryData(player, carry);
+		if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
+			player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+		}
 	}
 
 	private static BlockPos getDeathPlacementPos(BlockState state, ServerPlayer player)
