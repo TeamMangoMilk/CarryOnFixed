@@ -109,9 +109,12 @@ public class CommonEvents {
 
             CarryOnData carry = CarryOnDataManager.getCarryData(player);
             if (!carry.isCarrying()) {
+                boolean carryingIntent = PickupHandler.isTryingToCarry((ServerPlayer) player);
                 if (PickupHandler.tryPickupEntity((ServerPlayer) player, entity, null)) {
                     return InteractionResult.SUCCESS;
                 }
+                if(carryingIntent)
+                    return InteractionResult.FAIL;
             }
             else if(carry.isCarrying(CarryOnData.CarryType.ENTITY) || carry.isCarrying(CarryType.PLAYER))
             {

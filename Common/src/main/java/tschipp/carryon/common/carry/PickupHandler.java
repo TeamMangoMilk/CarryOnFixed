@@ -64,7 +64,7 @@ public class PickupHandler {
     public static boolean isTryingToCarry(ServerPlayer player)
     {
         CarryOnData carry = CarryOnDataManager.getCarryData(player);
-        return carry.isKeyPressed() || player.isShiftKeyDown();
+        return carry.isKeyPressed();
     }
 
     public static boolean canCarryGeneral(ServerPlayer player, Vec3 pos)

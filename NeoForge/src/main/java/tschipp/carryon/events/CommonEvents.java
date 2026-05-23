@@ -130,6 +130,7 @@ public class CommonEvents
 			return;
 
 		CarryOnData carry = CarryOnDataManager.getCarryData(player);
+		boolean carryingIntent = PickupHandler.isTryingToCarry((ServerPlayer) player);
 		if (!carry.isCarrying()) {
 			if (PickupHandler.tryPickupEntity((ServerPlayer) player, target, (toPickup) -> {
 				EntityPickupEvent pickupEvent = new EntityPickupEvent((ServerPlayer) player, toPickup);
@@ -142,6 +143,44 @@ public class CommonEvents
 			}
 		} else if (carry.isCarrying(CarryType.ENTITY) || carry.isCarrying(CarryType.PLAYER)) {
 			PlacementHandler.tryStackEntity((ServerPlayer) player, target);
+		}
+
+		if (carryingIntent) {
+			event.setCancellationResult(InteractionResult.FAIL);
+			event.setCanceled(true);
+		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGH)
+	public static void onEntitySpecificRightClick(PlayerInteractEvent.EntityInteractSpecific event)
+	{
+		if (event.isCanceled())
+			return;
+
+		Player player = event.getEntity();
+		Level level = event.getLevel();
+		Entity target = event.getTarget();
+
+		if (level.isClientSide)
+			return;
+
+		CarryOnData carry = CarryOnDataManager.getCarryData(player);
+		boolean carryingIntent = PickupHandler.isTryingToCarry((ServerPlayer) player);
+		if (!carry.isCarrying()) {
+			if (PickupHandler.tryPickupEntity((ServerPlayer) player, target, (toPickup) -> {
+				EntityPickupEvent pickupEvent = new EntityPickupEvent((ServerPlayer) player, toPickup);
+				NeoForge.EVENT_BUS.post(pickupEvent);
+				return !pickupEvent.isCanceled();
+			})) {
+				event.setCancellationResult(InteractionResult.SUCCESS);
+				event.setCanceled(true);
+				return;
+			}
+		}
+
+		if (carryingIntent) {
+			event.setCancellationResult(InteractionResult.FAIL);
+			event.setCanceled(true);
 		}
 	}
 
