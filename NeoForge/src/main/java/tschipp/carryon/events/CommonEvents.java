@@ -78,6 +78,7 @@ public class CommonEvents
 		boolean success = false;
 
 		CarryOnData carry = CarryOnDataManager.getCarryData(player);
+		boolean carryingIntent = PickupHandler.isTryingToCarry((ServerPlayer) player);
 		if (!carry.isCarrying()) {
 			if (PickupHandler.tryPickUpBlock((ServerPlayer) player, pos, level, (pState, pPos) -> {
 				BlockEvent.BreakEvent breakEvent = new BlockEvent.BreakEvent(level, pPos, pState, player);
@@ -107,10 +108,10 @@ public class CommonEvents
 			}
 		}
 
-		if (success) {
+		if (success || carryingIntent) {
 			event.setUseBlock(TriState.FALSE);
 			event.setUseItem(TriState.FALSE);
-			event.setCancellationResult(InteractionResult.SUCCESS);
+			event.setCancellationResult(success ? InteractionResult.SUCCESS : InteractionResult.FAIL);
 			event.setCanceled(true);
 		}
 	}

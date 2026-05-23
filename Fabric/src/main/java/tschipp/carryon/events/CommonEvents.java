@@ -69,11 +69,14 @@ public class CommonEvents {
             CarryOnData carry = CarryOnDataManager.getCarryData(player);
             if(!carry.isCarrying())
             {
+                boolean carryingIntent = PickupHandler.isTryingToCarry((ServerPlayer) player);
                 if (PickupHandler.tryPickUpBlock((ServerPlayer) player, pos, world, (pState, pPos) -> {
                     boolean success = PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(world, player, pPos, pState, world.getBlockEntity(pPos));
                     return success;
                 }))
                     return InteractionResult.SUCCESS;
+                if(carryingIntent)
+                    return InteractionResult.FAIL;
                 return InteractionResult.PASS;
             }
             else

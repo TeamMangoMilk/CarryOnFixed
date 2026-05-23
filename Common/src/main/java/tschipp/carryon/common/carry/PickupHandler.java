@@ -58,6 +58,14 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class PickupHandler {
+    private static final int SAME_TICK_PICKUP_COOLDOWN = 0;
+    private static final int ENTITY_PICKUP_COOLDOWN = 10;
+
+    public static boolean isTryingToCarry(ServerPlayer player)
+    {
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        return carry.isKeyPressed() || player.isShiftKeyDown();
+    }
 
     public static boolean canCarryGeneral(ServerPlayer player, Vec3 pos)
     {
@@ -71,12 +79,7 @@ public class PickupHandler {
         if(carry.isCarrying())
             return false;
 
-        if(!carry.isKeyPressed())
-            return false;
-
-        //Needed so that we don't pick up and place in the same tick / accidental consecutive clicks (10-tick placement cooldown)
-        int lastTick = carry.getTick();
-        if (lastTick != -1 && player.tickCount - lastTick < 10)
+        if(!isTryingToCarry(player))
             return false;
 
         if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR || player.gameMode.getGameModeForPlayer() == GameType.ADVENTURE)
@@ -87,10 +90,21 @@ public class PickupHandler {
         return true;
     }
 
+    private static boolean hasPickupCooldown(ServerPlayer player, int cooldownTicks)
+    {
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        int lastTick = carry.getTick();
+        int elapsedTicks = player.tickCount - lastTick;
+        return lastTick != -1 && elapsedTicks >= 0 && elapsedTicks <= cooldownTicks;
+    }
+
 
     public static boolean tryPickUpBlock(ServerPlayer player, BlockPos pos, Level level, @Nullable BiFunction<BlockState, BlockPos, Boolean> pickupCallback)
     {
         if(!canCarryGeneral(player, Vec3.atCenterOf(pos))) //Necessary
+            return false;
+
+        if(hasPickupCooldown(player, SAME_TICK_PICKUP_COOLDOWN))
             return false;
 
         CarryOnData carry = CarryOnDataManager.getCarryData(player);
@@ -161,6 +175,9 @@ public class PickupHandler {
     public static boolean tryPickupEntity(ServerPlayer player, Entity entity, @Nullable Function<Entity, Boolean> pickupCallback)
     {
         if(!canCarryGeneral(player, entity.position()))
+            return false;
+
+        if(hasPickupCooldown(player, ENTITY_PICKUP_COOLDOWN))
             return false;
 
         if (CarryOnCommon.isBackpackOrSimilar(entity) || CarryOnCommon.hasBackpackPassenger(entity))
