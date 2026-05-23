@@ -79,18 +79,23 @@ public abstract class EntityMixin
 			else if (hasPassenger(entity))
 			{
 				double height = thisPlayer.getBbHeight();
+				if (entity instanceof Player) {
+					height -= 0.7;
+				}
 				if (thisPlayer.isShiftKeyDown() || thisPlayer.isCrouching()) {
 					height -= 0.25;
 				}
 				Vec3 pos = thisPlayer.position().add(0, height, 0);
 				move.accept(entity, pos.x, pos.y, pos.z);
 
-				entity.setYRot(thisPlayer.getYRot());
-				entity.yRotO = thisPlayer.yRotO;
-				entity.setYHeadRot(thisPlayer.getYHeadRot());
-				if (entity instanceof LivingEntity livingPassenger) {
-					livingPassenger.yBodyRot = thisPlayer.yBodyRot;
-					livingPassenger.yBodyRotO = thisPlayer.yBodyRotO;
+				if (!(entity instanceof Player)) {
+					entity.setYRot(thisPlayer.getYRot());
+					entity.yRotO = thisPlayer.yRotO;
+					entity.setYHeadRot(thisPlayer.getYHeadRot());
+					if (entity instanceof LivingEntity livingPassenger) {
+						livingPassenger.yBodyRot = thisPlayer.yBodyRot;
+						livingPassenger.yBodyRotO = thisPlayer.yBodyRotO;
+					}
 				}
 				ci.cancel();
 			}
@@ -127,7 +132,8 @@ public abstract class EntityMixin
 		{
 			CarryOnData carry = CarryOnDataManager.getCarryData(thisPlayer);
 			if(carry.isCarrying(CarryType.PLAYER)) {
-				this.clampRotation(toUpdate);
+				// Disabled rotation clamping for player passengers to prevent recursive packet conflicts and wild camera spinning
+				// this.clampRotation(toUpdate);
 			}
 		}
 	}

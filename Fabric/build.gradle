@@ -5,7 +5,7 @@ plugins {
     id 'fabric-loom' version '1.7-SNAPSHOT'
 }
 base {
-    archivesName = "${mod_id}-fabric-${minecraft_version}"
+    archivesName = "carryon-revamped-fabric-${minecraft_version}"
 }
 
 /*

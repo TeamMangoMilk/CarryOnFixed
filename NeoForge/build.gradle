@@ -11,7 +11,7 @@ if (System.getenv('BUILD_NUMBER') != null) {
 }
 
 base {
-    archivesName = "${mod_id}-neoforge-${minecraft_version}"
+    archivesName = "carryon-revamped-neoforge-${minecraft_version}"
 }
 
 //jarJar.enable()

@@ -22,7 +22,7 @@ if (System.getenv('BUILD_NUMBER') != null) {
 
 
 base {
-    archivesName = "${mod_id}-forge-${minecraft_version}"
+    archivesName = "carryon-revamped-forge-${minecraft_version}"
 }
 
 mixin {

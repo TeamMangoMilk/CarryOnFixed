@@ -8,7 +8,7 @@
 ### Steps to Reproduce
 
 
-### Version of Minecraft, Carry On, Forge/Fabric
+### Version of Minecraft, Carry On Revamped, Forge/Fabric
 
 
 ### Screenshots encouraged

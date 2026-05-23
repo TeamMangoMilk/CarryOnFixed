@@ -29,11 +29,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import io.netty.buffer.Unpooled;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -45,10 +43,7 @@ import mangomilk.carryon.Constants;
 import mangomilk.carryon.common.scripting.CarryOnScript;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
 import java.util.Optional;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
 
 public class CarryOnData {
 
@@ -77,76 +72,9 @@ public class CarryOnData {
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CarryOnData> STREAM_CODEC = StreamCodec.of(
-            (buf, carry) -> {
-                try {
-                    CompoundTag tag = carry.getNbt();
-                    FriendlyByteBuf tempBuf = new FriendlyByteBuf(Unpooled.buffer());
-                    ByteBufCodecs.COMPOUND_TAG.encode(tempBuf, tag);
-                    byte[] rawBytes = new byte[tempBuf.readableBytes()];
-                    tempBuf.readBytes(rawBytes);
-
-                    if (rawBytes.length > 512) {
-                        buf.writeBoolean(true); // compressed
-                        byte[] compressedBytes = compress(rawBytes);
-                        buf.writeByteArray(compressedBytes);
-                    } else {
-                        buf.writeBoolean(false); // uncompressed
-                        buf.writeByteArray(rawBytes);
-                    }
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to encode CarryOnData: ", e);
-                    throw new RuntimeException(e);
-                }
-            },
-            buf -> {
-                try {
-                    boolean compressed = buf.readBoolean();
-                    byte[] bytes;
-                    if (compressed) {
-                        byte[] compressedBytes = buf.readByteArray();
-                        bytes = decompress(compressedBytes);
-                    } else {
-                        bytes = buf.readByteArray();
-                    }
-                    FriendlyByteBuf tempBuf = new FriendlyByteBuf(Unpooled.wrappedBuffer(bytes));
-                    CompoundTag tag = ByteBufCodecs.COMPOUND_TAG.decode(tempBuf);
-                    return new CarryOnData(tag);
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to decode CarryOnData: ", e);
-                    throw new RuntimeException(e);
-                }
-            }
+            (buf, carry) -> ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, carry.getNbt()),
+            buf -> new CarryOnData(ByteBufCodecs.TRUSTED_COMPOUND_TAG.decode(buf))
     );
-
-    private static byte[] compress(byte[] data) {
-        Deflater deflater = new Deflater();
-        deflater.setInput(data);
-        deflater.finish();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        byte[] buffer = new byte[1024];
-        while (!deflater.finished()) {
-            int count = deflater.deflate(buffer);
-            outputStream.write(buffer, 0, count);
-        }
-        try {
-            outputStream.close();
-        } catch (Exception e) {
-        }
-        return outputStream.toByteArray();
-    }
-
-    private static byte[] decompress(byte[] data) throws Exception {
-        Inflater inflater = new Inflater();
-        inflater.setInput(data);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        byte[] buffer = new byte[1024];
-        while (!inflater.finished()) {
-            int count = inflater.inflate(buffer);
-            outputStream.write(buffer, 0, count);
-        }
-        outputStream.close();
-        return outputStream.toByteArray();
-    }
 
     public static final String SERIALIZATION_KEY = "CarryOnData";
 
