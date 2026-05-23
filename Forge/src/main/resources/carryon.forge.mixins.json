@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "tschipp.carryon.mixin",
+  "package": "mangomilk.carryon.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
   ],

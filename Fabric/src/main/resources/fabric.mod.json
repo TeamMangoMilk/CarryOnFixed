@@ -5,12 +5,12 @@
     "name": "${mod_name}",
     "description": "${description}",
     "authors": [
-      "Tschipp", "Purplicious_Cow"
+      "MangoMilk", "Purplicious_Cow"
     ],
     "contact": {
-      "homepage": "https://tschipp.ch/",
-      "sources": "https://github.com/Tschipp/CarryOn",
-      "issues": "https://github.com/Tschipp/CarryOn/issues"
+      "homepage": "https://mangomilk.ch/",
+      "sources": "https://github.com/MangoMilk/CarryOn",
+      "issues": "https://github.com/MangoMilk/CarryOn/issues"
     },
   
     "license": "${license}",
@@ -19,10 +19,10 @@
     "environment": "*",
     "entrypoints": {
       "main": [
-        "tschipp.carryon.CarryOnFabricMod"
+        "mangomilk.carryon.CarryOnFabricMod"
       ],
       "client": [
-        "tschipp.carryon.CarryOnFabricClientMod"
+        "mangomilk.carryon.CarryOnFabricClientMod"
       ]
     },
     "mixins": [

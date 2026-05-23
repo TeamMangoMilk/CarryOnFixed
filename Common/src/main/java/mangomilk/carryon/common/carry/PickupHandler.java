@@ -1,0 +1,294 @@
+/*
+ * GNU Lesser General Public License v3
+ * Copyright (C) 2024 Tschipp
+ * mrtschipp@gmail.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
+package mangomilk.carryon.common.carry;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Entity.RemovalReason;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import mangomilk.carryon.CarryOnCommon;
+import mangomilk.carryon.Constants;
+import mangomilk.carryon.common.config.ListHandler;
+import mangomilk.carryon.common.pickupcondition.PickupCondition;
+import mangomilk.carryon.common.pickupcondition.PickupConditionHandler;
+import mangomilk.carryon.common.scripting.CarryOnScript;
+import mangomilk.carryon.common.scripting.ScriptManager;
+import mangomilk.carryon.networking.clientbound.ClientboundStartRidingOtherPlayerPacket;
+import mangomilk.carryon.platform.Services;
+
+import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+public class PickupHandler {
+    private static final int SAME_TICK_PICKUP_COOLDOWN = 0;
+    private static final int ENTITY_PICKUP_COOLDOWN = 10;
+
+    public static boolean isTryingToCarry(ServerPlayer player)
+    {
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        return carry.isKeyPressed();
+    }
+
+    public static boolean canCarryGeneral(ServerPlayer player, Vec3 pos)
+    {
+        if(!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty())
+            return false;
+
+        if(player.position().distanceTo(pos) > Constants.COMMON_CONFIG.settings.maxDistance)
+            return false;
+
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        if(carry.isCarrying())
+            return false;
+
+        if(!isTryingToCarry(player))
+            return false;
+
+        if (player.gameMode.getGameModeForPlayer() == GameType.SPECTATOR || player.gameMode.getGameModeForPlayer() == GameType.ADVENTURE)
+            return false;
+
+
+
+        return true;
+    }
+
+    private static boolean hasPickupCooldown(ServerPlayer player, int cooldownTicks)
+    {
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        int lastTick = carry.getTick();
+        int elapsedTicks = player.tickCount - lastTick;
+        return lastTick != -1 && elapsedTicks >= 0 && elapsedTicks <= cooldownTicks;
+    }
+
+
+    public static boolean tryPickUpBlock(ServerPlayer player, BlockPos pos, Level level, @Nullable BiFunction<BlockState, BlockPos, Boolean> pickupCallback)
+    {
+        if(!canCarryGeneral(player, Vec3.atCenterOf(pos))) //Necessary
+            return false;
+
+        if(hasPickupCooldown(player, SAME_TICK_PICKUP_COOLDOWN))
+            return false;
+
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        BlockState state = level.getBlockState(pos);
+        CompoundTag nbt = null;
+        if(blockEntity != null)
+            nbt = blockEntity.saveWithId(level.registryAccess());
+
+        Optional<CarryOnScript> result =  ScriptManager.inspectBlock(state, level, pos, nbt);
+        boolean overrideChecks = result.map(CarryOnScript::overrideChecks).orElse(false);
+
+        if(!ListHandler.isPermitted(state.getBlock()))
+            return false;
+
+        if(!overrideChecks && (state.getDestroySpeed(level, pos) == -1 && !player.isCreative() && !Constants.COMMON_CONFIG.settings.pickupUnbreakableBlocks))
+            return false;
+
+        if(!overrideChecks && (blockEntity == null && !Constants.COMMON_CONFIG.settings.pickupAllBlocks))
+            return false;
+
+        //Check if TE is locked
+        if(blockEntity != null)
+        {
+            if(nbt.contains("Lock") && !nbt.getString("Lock").equals(""))
+                return false;
+        }
+
+        Optional<PickupCondition> cond = PickupConditionHandler.getPickupCondition(state);
+        if(cond.isPresent())
+        {
+            if(!cond.get().isFulfilled(player))
+                return false;
+        }
+
+        boolean doPickup = pickupCallback == null ? true : pickupCallback.apply(state, pos);
+        if(!doPickup)
+            return false;
+
+        if(result.isPresent())
+        {
+            CarryOnScript script = result.get();
+            if(!script.fulfillsConditions(player))
+                return false;
+
+            carry.setActiveScript(script);
+
+            String cmd = script.scriptEffects().commandInit();
+            if(!cmd.isEmpty())
+                player.getServer().getCommands().performPrefixedCommand(player.getServer().createCommandSourceStack(), "/execute as " + player.getGameProfile().getName() + " run " + cmd);
+        }
+
+        carry.setBlock(state, blockEntity);
+
+        level.removeBlockEntity(pos);
+        level.removeBlock(pos, false);
+
+        CarryOnDataManager.setCarryData(player, carry);
+        level.playSound(null, pos, state.getSoundType().getHitSound(), SoundSource.BLOCKS, 1.0f, 0.5f);
+        player.swing(InteractionHand.MAIN_HAND, true);
+        if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100000000, CarryOnCommon.potionLevel(carry, player.level()), false, false));
+        return true;
+    }
+
+
+
+    public static boolean tryPickupEntity(ServerPlayer player, Entity entity, @Nullable Function<Entity, Boolean> pickupCallback)
+    {
+        if(!canCarryGeneral(player, entity.position()))
+            return false;
+
+        if(hasPickupCooldown(player, ENTITY_PICKUP_COOLDOWN))
+            return false;
+
+        if (CarryOnCommon.isBackpackOrSimilar(entity) || CarryOnCommon.hasBackpackPassenger(entity))
+            return false;
+
+        if (entity.invulnerableTime != 0)
+            return false;
+
+        if(entity.isRemoved())
+            return false;
+
+        if (entity instanceof TamableAnimal tame)
+        {
+            UUID owner = tame.getOwnerUUID();
+            UUID playerID = player.getGameProfile().getId();
+            if (owner != null && !owner.equals(playerID))
+                return false;
+        }
+
+        Optional<CarryOnScript> result =  ScriptManager.inspectEntity(entity);
+        boolean overrideChecks = result.map(CarryOnScript::overrideChecks).orElse(false);
+
+        if(!ListHandler.isPermitted(entity))
+        {
+            //We can pick up baby animals even if the grown up animal is blacklisted.
+            if(!overrideChecks && (!(entity instanceof AgeableMob ageableMob && Constants.COMMON_CONFIG.settings.allowBabies && (ageableMob.getAge() < 0 || ageableMob.isBaby()))))
+                return false;
+        }
+
+        //Non-Creative only guards
+        if(!player.isCreative())
+        {
+            if(!overrideChecks && (!Constants.COMMON_CONFIG.settings.pickupHostileMobs && entity.getType().getCategory() == MobCategory.MONSTER))
+                return false;
+
+            if(Constants.COMMON_CONFIG.settings.maxEntityHeight < entity.getBbHeight() || Constants.COMMON_CONFIG.settings.maxEntityWidth < entity.getBbWidth())
+                return false;
+        }
+
+        Optional<PickupCondition> cond = PickupConditionHandler.getPickupCondition(entity);
+        if(cond.isPresent())
+        {
+            if(!cond.get().isFulfilled(player))
+                return false;
+        }
+
+        boolean doPickup = pickupCallback == null ? true : pickupCallback.apply(entity);
+        if(!doPickup)
+            return false;
+
+        CarryOnData carry = CarryOnDataManager.getCarryData(player);
+
+        if(result.isPresent())
+        {
+            CarryOnScript script = result.get();
+            if(!script.fulfillsConditions(player))
+                return false;
+
+            carry.setActiveScript(script);
+        }
+
+        if (entity instanceof Player otherPlayer) {
+            if (!Constants.COMMON_CONFIG.settings.pickupPlayers)
+                return false;
+
+            if (!player.isCreative() && otherPlayer.isCreative())
+                return false;
+
+            otherPlayer.ejectPassengers();
+            otherPlayer.stopRiding();
+
+            if (result.isPresent()) {
+                String cmd = result.get().scriptEffects().commandInit();
+                if (!cmd.isEmpty())
+                    player.getServer().getCommands().performPrefixedCommand(player.getServer().createCommandSourceStack(), "/execute as " + player.getGameProfile().getName() + " run " + cmd);
+            }
+
+            otherPlayer.startRiding(player, true);
+            Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(player.getId(), otherPlayer.getId(), true), (ServerLevel) player.level());
+            carry.setCarryingPlayer();
+            player.swing(InteractionHand.MAIN_HAND, true);
+            player.level().playSound(null, player.getOnPos(), SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.AMBIENT, 1.0f, 0.5f);
+            CarryOnDataManager.setCarryData(player, carry);
+            if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100000000, CarryOnCommon.potionLevel(carry, player.level()), false, false));
+            return true;
+
+        }
+
+        entity.ejectPassengers();
+        entity.stopRiding();
+        if (entity instanceof Animal animal) {
+            animal.dropLeash(true, true);
+        }
+
+        if(result.isPresent())
+        {
+            String cmd = result.get().scriptEffects().commandInit();
+            if(!cmd.isEmpty())
+                player.getServer().getCommands().performPrefixedCommand(player.getServer().createCommandSourceStack(), "/execute as " + player.getGameProfile().getName() + " run " + cmd);
+        }
+
+        carry.setEntity(entity);
+        entity.remove(RemovalReason.UNLOADED_WITH_PLAYER);
+
+        player.level().playSound(null, player.getOnPos(), SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.AMBIENT, 1.0f, 0.5f);
+        CarryOnDataManager.setCarryData(player, carry);
+        player.swing(InteractionHand.MAIN_HAND, true);
+        if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100000000, CarryOnCommon.potionLevel(carry, player.level()), false, false));
+        return true;
+    }
+
+}
