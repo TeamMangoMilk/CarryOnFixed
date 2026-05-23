@@ -232,7 +232,7 @@ public class CarryConfig
 
 		@Property(
 				type = PropertyType.CATEGORY,
-				description = "Whitelist. Read about the format here: https://github.com/MangoMilk/CarryOn/wiki/Black---and-Whitelist-Config"
+				description = "Whitelist. Read about the format here: https://github.com/TeamMangoMilk/CarryOnRevamped/wiki/Black---and-Whitelist-Config"
 		)
 
 		//Whitelist
@@ -263,7 +263,7 @@ public class CarryConfig
 		//Blacklist
 		@Property(
 				type = PropertyType.CATEGORY,
-				description = "Blacklist. Read about the format here: https://github.com/MangoMilk/CarryOn/wiki/Black---and-Whitelist-Config"
+				description = "Blacklist. Read about the format here: https://github.com/TeamMangoMilk/CarryOnRevamped/wiki/Black---and-Whitelist-Config"
 		)
 		public Blacklist blacklist = new Blacklist();
 
@@ -363,7 +363,7 @@ public class CarryConfig
 		//Custom Pickup Conditions
 		@Property(
 				type = PropertyType.CATEGORY,
-				description = "Custom Pickup Conditions. Read about the format here: https://github.com/MangoMilk/CarryOn/wiki/Custom-Pickup-Condition-Config"
+				description = "Custom Pickup Conditions. Read about the format here: https://github.com/TeamMangoMilk/CarryOnRevamped/wiki/Custom-Pickup-Condition-Config"
 		)
 		public CustomPickupConditions customPickupConditions = new CustomPickupConditions();
 
@@ -402,7 +402,7 @@ public class CarryConfig
 
 		@Property(
 				type = PropertyType.STRING_ARRAY,
-				description = "Model Overrides based on NBT or Meta. Advanced users only! Read about the format here: https://github.com/MangoMilk/CarryOn/wiki/Model-Override-Config"
+				description = "Model Overrides based on NBT or Meta. Advanced users only! Read about the format here: https://github.com/TeamMangoMilk/CarryOnRevamped/wiki/Model-Override-Config"
 		)
 		public String[] modelOverrides = {
 				"minecraft:redstone_wire->(item)minecraft:redstone",

@@ -5,12 +5,15 @@
     "name": "${mod_name}",
     "description": "${description}",
     "authors": [
-      "MangoMilk", "Purplicious_Cow"
+      "TeamMangoMilk"
+    ],
+    "contributors": [
+      "Tschipp (Original Creator)", "Purplicious_Cow (Original Creator)"
     ],
     "contact": {
-      "homepage": "https://mangomilk.ch/",
-      "sources": "https://github.com/MangoMilk/CarryOn",
-      "issues": "https://github.com/MangoMilk/CarryOn/issues"
+      "homepage": "https://mangomilk.team/",
+      "sources": "https://github.com/TeamMangoMilk/CarryOnRevamped",
+      "issues": "https://github.com/TeamMangoMilk/CarryOnRevamped/issues"
     },
   
     "license": "${license}",
