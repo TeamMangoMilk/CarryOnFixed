@@ -142,4 +142,13 @@ public abstract class EntityMixin
 		pEntityToUpdate.setYRot(pEntityToUpdate.getYRot() + f1 - f);
 		pEntityToUpdate.setYHeadRot(pEntityToUpdate.getYRot());
 	}
+
+	@Inject(method = "canAddPassenger(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), cancellable = true)
+	private void onCanAddPassenger(Entity passenger, CallbackInfoReturnable<Boolean> cir)
+	{
+		if ((Object)this instanceof Player)
+		{
+			cir.setReturnValue(true);
+		}
+	}
 }

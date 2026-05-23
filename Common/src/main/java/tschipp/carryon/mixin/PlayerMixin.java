@@ -52,10 +52,4 @@ public abstract class PlayerMixin extends LivingEntity  {
         res.ifPresent(data -> CarryOnDataManager.setCarryData((Player)((Object)this), data));
     }
 
-    @Inject(method = "canAddPassenger(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), cancellable = true)
-    private void onCanAddPassenger(Entity passenger, CallbackInfoReturnable<Boolean> cir)
-    {
-        cir.setReturnValue(true);
-    }
-
 }
