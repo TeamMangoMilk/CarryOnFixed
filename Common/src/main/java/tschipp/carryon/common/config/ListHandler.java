@@ -42,6 +42,7 @@ public class ListHandler {
     private static Set<String> ALLOWED_TILES = new HashSet<>();
     private static Set<String> FORBIDDEN_STACKING = new HashSet<>();
     private static Set<String> ALLOWED_STACKING = new HashSet<>();
+    private static Set<String> UNSAFE_PLACEMENT_TARGETS = new HashSet<>();
 
     private static List<TagKey<Block>> FORBIDDEN_TILES_TAGS = new ArrayList<>();
     private static List<TagKey<EntityType<?>>> FORBIDDEN_ENTITIES_TAGS = new ArrayList<>();
@@ -49,6 +50,7 @@ public class ListHandler {
     private static List<TagKey<Block>> ALLOWED_TILES_TAGS = new ArrayList<>();
     private static List<TagKey<EntityType<?>>> FORBIDDEN_STACKING_TAGS = new ArrayList<>();
     private static List<TagKey<EntityType<?>>> ALLOWED_STACKING_TAGS = new ArrayList<>();
+    private static List<TagKey<EntityType<?>>> UNSAFE_PLACEMENT_TARGETS_TAGS = new ArrayList<>();
 
     private static Set<Property<?>> PROPERTY_EXCEPTION_CLASSES = new HashSet<>();
 
@@ -82,6 +84,11 @@ public class ListHandler {
             return doCheck(entity, ALLOWED_STACKING, ALLOWED_STACKING_TAGS);
         else
             return !doCheck(entity, FORBIDDEN_STACKING, FORBIDDEN_STACKING_TAGS);
+    }
+
+    public static boolean isUnsafePlacementTarget(Entity entity)
+    {
+        return doCheck(entity, UNSAFE_PLACEMENT_TARGETS, UNSAFE_PLACEMENT_TARGETS_TAGS);
     }
 
     public static boolean isPropertyException(Property<?> prop)
@@ -123,6 +130,8 @@ public class ListHandler {
         ALLOWED_ENTITIES_TAGS.clear();
         ALLOWED_STACKING.clear();
         ALLOWED_STACKING_TAGS.clear();
+        UNSAFE_PLACEMENT_TARGETS.clear();
+        UNSAFE_PLACEMENT_TARGETS_TAGS.clear();
         ALLOWED_TILES.clear();
         ALLOWED_TILES_TAGS.clear();
         PROPERTY_EXCEPTION_CLASSES.clear();
@@ -158,6 +167,9 @@ public class ListHandler {
 
         List<String> backItems = new ArrayList<>(List.of(Constants.COMMON_CONFIG.settings.backItems));
         addWithWildcards(backItems, BACK_ITEMS, BuiltInRegistries.ENTITY_TYPE, entitytags, BACK_ITEMS_TAGS);
+
+        List<String> unsafePlacementTargets = new ArrayList<>(List.of(Constants.COMMON_CONFIG.settings.unsafePlacementTargets));
+        addWithWildcards(unsafePlacementTargets, UNSAFE_PLACEMENT_TARGETS, BuiltInRegistries.ENTITY_TYPE, entitytags, UNSAFE_PLACEMENT_TARGETS_TAGS);
 
         for(String propString : Constants.COMMON_CONFIG.settings.placementStateExceptions)
         {
@@ -244,6 +256,11 @@ public class ListHandler {
     public static void addAllowedStacking(String toAdd)
     {
         ALLOWED_ENTITIES.add(toAdd);
+    }
+
+    public static void addUnsafePlacementTarget(String toAdd)
+    {
+        UNSAFE_PLACEMENT_TARGETS.add(toAdd);
     }
 
 }

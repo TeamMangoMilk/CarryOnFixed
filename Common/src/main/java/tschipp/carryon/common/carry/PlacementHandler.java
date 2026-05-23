@@ -41,6 +41,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import tschipp.carryon.CarryOnCommon;
@@ -54,7 +55,9 @@ import tschipp.carryon.platform.Services;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 public class PlacementHandler
@@ -175,9 +178,17 @@ public class PlacementHandler
 		}
 
 		Vec3 placementPos = Vec3.atBottomCenterOf(pos);
+		if (!isSafePlacementPosition(level, pos, placementPos, player)) {
+			playFailSound(level, player);
+			return false;
+		}
 
 		if (carry.isCarrying(CarryType.PLAYER)) {
 			Entity otherPlayer = player.getFirstPassenger();
+			if (otherPlayer == null) {
+				playFailSound(level, player);
+				return false;
+			}
 			player.ejectPassengers();
 			Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(player.getId(), otherPlayer.getId(), false), player.serverLevel());
 			carry.clear();
@@ -237,11 +248,19 @@ public class PlacementHandler
 		double sizeHeldEntity = entityHeld.getBbHeight() * entityHeld.getBbWidth();
 		double distance = entityClicked.blockPosition().distSqr(player.blockPosition());
 		Entity lowestEntity = entityClicked.getRootVehicle();
+		if (isUnsafePlacementTarget(entityClicked) || isUnsafePlacementTarget(lowestEntity)) {
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.LAVA_POP, SoundSource.PLAYERS, 0.5F, 0.5F);
+			return;
+		}
 		if (CarryOnCommon.isBackpackOrSimilar(lowestEntity) || CarryOnCommon.hasBackpackPassenger(lowestEntity))
 			return;
 		int numPassengers = getPassengerCount(lowestEntity);
 		if (numPassengers < Constants.COMMON_CONFIG.settings.maxEntityStackLimit - 1) {
 			Entity topEntity = getTopPassenger(lowestEntity);
+			if (isUnsafePlacementTarget(topEntity)) {
+				level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.LAVA_POP, SoundSource.PLAYERS, 0.5F, 0.5F);
+				return;
+			}
 
 			if (topEntity == entityHeld)
 				return;
@@ -399,6 +418,45 @@ public class PlacementHandler
 		}
 
 		return top;
+	}
+
+	private static boolean isSafePlacementPosition(Level level, BlockPos pos, Vec3 placementPos, ServerPlayer player)
+	{
+		if (!Double.isFinite(placementPos.x) || !Double.isFinite(placementPos.y) || !Double.isFinite(placementPos.z))
+			return false;
+		if (level.isOutsideBuildHeight(pos) || !level.hasChunkAt(pos))
+			return false;
+
+		AABB unsafeTargetSearchArea = AABB.ofSize(placementPos, 2.0D, 2.0D, 2.0D);
+		return level.getEntities(player, unsafeTargetSearchArea, PlacementHandler::isUnsafePlacementTarget).isEmpty();
+	}
+
+	private static boolean isUnsafePlacementTarget(Entity entity)
+	{
+		if (entity == null)
+			return false;
+		return isUnsafePlacementTarget(entity, new HashSet<>());
+	}
+
+	private static boolean isUnsafePlacementTarget(Entity entity, Set<Entity> visited)
+	{
+		if (entity == null || !visited.add(entity))
+			return false;
+		if (ListHandler.isUnsafePlacementTarget(entity))
+			return true;
+		Entity rootVehicle = entity.getRootVehicle();
+		if (rootVehicle != entity && isUnsafePlacementTarget(rootVehicle, visited))
+			return true;
+		for (Entity passenger : entity.getPassengers()) {
+			if (isUnsafePlacementTarget(passenger, visited))
+				return true;
+		}
+		return false;
+	}
+
+	private static void playFailSound(Level level, ServerPlayer player)
+	{
+		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.LAVA_POP, SoundSource.PLAYERS, 0.5F, 0.5F);
 	}
 
 }

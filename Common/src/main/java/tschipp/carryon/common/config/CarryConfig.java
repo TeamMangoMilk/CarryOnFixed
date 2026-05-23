@@ -219,6 +219,15 @@ public class CarryConfig
                     "colytra:*",
                     "quark:backpack"
             };
+
+            @Property(
+                    type = PropertyType.STRING_ARRAY,
+                    description = "Entities that are unsafe targets for placing or stacking carried players/entities onto. This is intended for simulated or transformed entities, such as moving contraptions, where vanilla teleport/riding coordinates may not match real world positions. Format: modid:entity_id, #modid:tag, modid:*, or wildcard matching."
+            )
+            public String[] unsafePlacementTargets = {
+                    "#c:teleporting_not_supported",
+                    "create:*contraption*"
+            };
         }
 
 		@Property(
