@@ -118,12 +118,12 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public CarryOnData getCarryData(Player player) {
         if (player == null) {
-            return new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            return CarryOnData.empty();
         }
         var cap = player.getCapability(CarryOnDataCapabilityProvider.CARRY_ON_DATA_CAPABILITY).orElse(new CarryOnDataCapability());
         CarryOnData data = cap.getCarryData();
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
             cap.setCarryData(data);
         }
         return data;
@@ -135,7 +135,7 @@ public class ForgePlatformHelper implements IPlatformHelper {
             return;
         }
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
         }
         var cap = player.getCapability(CarryOnDataCapabilityProvider.CARRY_ON_DATA_CAPABILITY).orElse(new CarryOnDataCapability());
         cap.setCarryData(data);

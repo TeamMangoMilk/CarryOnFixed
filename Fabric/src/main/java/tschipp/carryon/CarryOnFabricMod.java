@@ -23,7 +23,6 @@ package tschipp.carryon;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import tschipp.carryon.common.carry.CarryOnData;
 import tschipp.carryon.config.fabric.ConfigLoaderImpl;
@@ -44,7 +43,7 @@ public class CarryOnFabricMod implements ModInitializer {
     ); */
 
     public static final AttachmentType<CarryOnData> CARRY_ON_DATA_ATTACHMENT_TYPE = AttachmentRegistry.<CarryOnData>builder()
-            .initializer(() -> new CarryOnData(new CompoundTag()))
+            .initializer(CarryOnData::empty)
             .persistent(CarryOnData.CODEC)
             .buildAndRegister(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "carry_on_data"));
 

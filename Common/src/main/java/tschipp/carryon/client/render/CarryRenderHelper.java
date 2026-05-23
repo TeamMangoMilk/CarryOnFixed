@@ -317,8 +317,13 @@ public class CarryRenderHelper
 		{
 			CarryOnScript script = carry.getActiveScript().get();
 			ScriptRender render = script.scriptRender();
-			if(render.renderNameEntity().isPresent())
-				entity = BuiltInRegistries.ENTITY_TYPE.get(render.renderNameEntity().get()).create(player.level());
+			if(render.renderNameEntity().isPresent()) {
+				Entity renderedEntity = BuiltInRegistries.ENTITY_TYPE.get(render.renderNameEntity().get()).create(player.level());
+				if (renderedEntity != null)
+					entity = renderedEntity;
+				else
+					Constants.LOG.warn("Could not create Carry On render entity '{}', using carried entity instead", render.renderNameEntity().get().location());
+			}
 
 			if(render.renderNBT().isPresent())
 				entity.load(render.renderNBT().get());

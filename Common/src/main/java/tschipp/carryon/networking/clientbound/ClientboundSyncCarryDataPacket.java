@@ -15,7 +15,7 @@ public record ClientboundSyncCarryDataPacket(int iden, CarryOnData data) impleme
 
     public ClientboundSyncCarryDataPacket {
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
         }
     }
 

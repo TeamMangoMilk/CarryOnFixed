@@ -75,23 +75,21 @@ public class CarryOnData {
 
     public static final String SERIALIZATION_KEY = "CarryOnData";
 
+    public static CarryOnData empty() {
+        return new CarryOnData(new CompoundTag());
+    }
+
     public CarryOnData(CompoundTag data)
     {
-        if(data.contains("type"))
-            this.type = CarryType.valueOf(data.getString("type"));
-        else
-            this.type = CarryType.INVALID;
+        this.type = parseType(data);
 
-        this.nbt = data;
+        this.nbt = this.type == CarryType.INVALID ? new CompoundTag() : data.copy();
 
         if(data.contains("keyPressed"))
             this.keyPressed = data.getBoolean("keyPressed");
 
         if(data.contains("activeScript"))
-        {
-            DataResult<CarryOnScript> res = CarryOnScript.CODEC.parse(NbtOps.INSTANCE, data.get("activeScript"));
-            this.activeScript = res.getOrThrow((s) -> {throw new RuntimeException("Failed to decode activeScript during CarryOnData serialization: " + s);});
-        }
+            this.activeScript = decodeActiveScript(data.get("activeScript"));
 
         if(data.contains("selected"))
             this.selectedSlot = data.getInt("selected");
@@ -102,12 +100,11 @@ public class CarryOnData {
     {
         nbt.putString("type", type.toString());
         nbt.putBoolean("keyPressed", keyPressed);
-        if(activeScript != null)
-        {
-            DataResult<Tag> res = CarryOnScript.CODEC.encodeStart(NbtOps.INSTANCE, activeScript);
-            Tag tag = res.getOrThrow((s) -> {throw new RuntimeException("Failed to encode activeScript during CarryOnData serialization: " + s);});
-            nbt.put("activeScript", tag);
-        }
+        Optional<Tag> encodedScript = encodeActiveScript();
+        if(encodedScript.isPresent())
+            nbt.put("activeScript", encodedScript.get());
+        else
+            nbt.remove("activeScript");
         nbt.putInt("selected", this.selectedSlot);
         return nbt;
     }
@@ -155,7 +152,12 @@ public class CarryOnData {
         if(!nbt.contains("tile"))
             return null;
 
-        return BlockEntity.loadStatic(pos, this.getBlock(), nbt.getCompound("tile"), lookup);
+        try {
+            return BlockEntity.loadStatic(pos, this.getBlock(), nbt.getCompound("tile"), lookup);
+        } catch (Exception e) {
+            Constants.LOG.warn("Failed to restore carried block entity at {}, placing block without block entity data", pos, e);
+            return null;
+        }
     }
 
     public void setEntity(Entity entity)
@@ -171,13 +173,48 @@ public class CarryOnData {
         if(this.type != CarryType.ENTITY)
             throw new IllegalStateException("Called getEntity on data that contained " + this.type);
 
-        var optionalEntity = EntityType.create(nbt.getCompound("entity"), level);
-        if(optionalEntity.isPresent())
-            return optionalEntity.get();
+        try {
+            var optionalEntity = EntityType.create(nbt.getCompound("entity"), level);
+            if(optionalEntity.isPresent())
+                return optionalEntity.get();
+        } catch (Exception e) {
+            Constants.LOG.warn("Failed to restore carried entity from data: " + nbt, e);
+        }
 
-        Constants.LOG.error("Called EntityType#create even though no entity data was present. Data: " + nbt.toString());
+        Constants.LOG.error("Could not restore carried entity. Data: " + nbt);
         this.clear();
         return new AreaEffectCloud(level, 0, 0, 0);
+    }
+
+    private static CarryType parseType(CompoundTag data) {
+        if(!data.contains("type"))
+            return CarryType.INVALID;
+
+        String rawType = data.getString("type");
+        try {
+            return CarryType.valueOf(rawType);
+        } catch (IllegalArgumentException e) {
+            Constants.LOG.warn("Invalid Carry On data type '{}', clearing carried content", rawType);
+            return CarryType.INVALID;
+        }
+    }
+
+    @Nullable
+    private static CarryOnScript decodeActiveScript(Tag scriptTag) {
+        return CarryOnScript.CODEC.parse(NbtOps.INSTANCE, scriptTag)
+                .resultOrPartial(message -> Constants.LOG.warn("Failed to decode Carry On active script, ignoring it: {}", message))
+                .orElse(null);
+    }
+
+    private Optional<Tag> encodeActiveScript() {
+        if(activeScript == null)
+            return Optional.empty();
+
+        Optional<Tag> encoded = CarryOnScript.CODEC.encodeStart(NbtOps.INSTANCE, activeScript)
+                .resultOrPartial(message -> Constants.LOG.warn("Failed to encode Carry On active script, dropping it: {}", message));
+        if(encoded.isEmpty())
+            activeScript = null;
+        return encoded;
     }
 
     public Optional<CarryOnScript> getActiveScript()

@@ -88,14 +88,14 @@ public class CommonEvents
 			}
 		} else {
 			if (carry.isCarrying(CarryType.BLOCK)) {
-				PlacementHandler.tryPlaceBlock((ServerPlayer) player, pos, event.getFace(), (pos2, state) -> {
+				success = PlacementHandler.tryPlaceBlock((ServerPlayer) player, pos, event.getFace(), (pos2, state) -> {
 					BlockSnapshot snapshot = BlockSnapshot.create(level.dimension(), level, pos2);
 					BlockEvent.EntityPlaceEvent event1 = new BlockEvent.EntityPlaceEvent(snapshot, level.getBlockState(pos), player);
 					NeoForge.EVENT_BUS.post(event1);
 					return !event1.isCanceled();
 				});
 			} else {
-				PlacementHandler.tryPlaceEntity((ServerPlayer) player, pos, event.getFace(), (pPos, toPlace) -> {
+				success = PlacementHandler.tryPlaceEntity((ServerPlayer) player, pos, event.getFace(), (pPos, toPlace) -> {
 					if (toPlace instanceof Mob mob) {
 						mob.setPos(pPos.x, pPos.y, pPos.z);
 						MobSpawnEvent.PositionCheck checkSpawn = new MobSpawnEvent.PositionCheck(mob, (ServerLevelAccessor) level, MobSpawnType.EVENT, null);
@@ -105,7 +105,6 @@ public class CommonEvents
 					return true;
 				});
 			}
-			success = true;
 		}
 
 		if (success) {

@@ -11,6 +11,7 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import tschipp.carryon.Constants;
 import tschipp.carryon.common.carry.CarryOnData;
 
 public class CarryOnDataCapabilityProvider implements ICapabilitySerializable<CompoundTag> {
@@ -27,12 +28,17 @@ public class CarryOnDataCapabilityProvider implements ICapabilitySerializable<Co
 
     @Override
     public CompoundTag serializeNBT(HolderLookup.Provider registryAccess) {
-        return (CompoundTag) CarryOnData.CODEC.encodeStart(NbtOps.INSTANCE, impl.getCarryData()).getOrThrow();
+        return CarryOnData.CODEC.encodeStart(NbtOps.INSTANCE, impl.getCarryData())
+                .resultOrPartial(message -> Constants.LOG.warn("Failed to serialize Carry On data, writing empty data: {}", message))
+                .filter(CompoundTag.class::isInstance)
+                .map(CompoundTag.class::cast)
+                .orElseGet(CompoundTag::new);
     }
 
     @Override
     public void deserializeNBT(HolderLookup.Provider registryAccess, CompoundTag nbt) {
-        CarryOnData data = CarryOnData.CODEC.parse(NbtOps.INSTANCE, nbt).getOrThrow();
-        impl.setCarryData(data);
+        CarryOnData.CODEC.parse(NbtOps.INSTANCE, nbt)
+                .resultOrPartial(message -> Constants.LOG.warn("Failed to deserialize Carry On data, clearing it: {}", message))
+                .ifPresentOrElse(impl::setCarryData, () -> impl.setCarryData(CarryOnData.empty()));
     }
 }

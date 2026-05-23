@@ -48,6 +48,9 @@ public abstract class PlayerMixin extends LivingEntity  {
     @Inject(method = "readAdditionalSaveData(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"))
     private void onReadAdditionalSaveData(CompoundTag tag, CallbackInfo info)
     {
+        if (!tag.contains(CarryOnData.SERIALIZATION_KEY))
+            return;
+
         Optional<CarryOnData> res = CarryOnData.CODEC.parse(NbtOps.INSTANCE, tag.get(CarryOnData.SERIALIZATION_KEY)).result();
         res.ifPresent(data -> CarryOnDataManager.setCarryData((Player)((Object)this), data));
     }

@@ -111,11 +111,11 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public CarryOnData getCarryData(Player player) {
         if (player == null) {
-            return new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            return CarryOnData.empty();
         }
         CarryOnData data = player.getData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT);
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
             player.setData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT, data);
         }
         return data;
@@ -127,7 +127,7 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
             return;
         }
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
         }
         player.setData(CarryOnNeoForge.CARRY_ON_DATA_ATTACHMENT, data);
         if(!player.level().isClientSide) {

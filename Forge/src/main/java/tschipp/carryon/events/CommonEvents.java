@@ -93,14 +93,14 @@ public class CommonEvents
 			}
 		} else {
 			if (carry.isCarrying(CarryType.BLOCK)) {
-				PlacementHandler.tryPlaceBlock((ServerPlayer) player, pos, event.getFace(), (pos2, state) -> {
+				success = PlacementHandler.tryPlaceBlock((ServerPlayer) player, pos, event.getFace(), (pos2, state) -> {
 					BlockSnapshot snapshot = BlockSnapshot.create(level.dimension(), level, pos2);
 					EntityPlaceEvent event1 = new EntityPlaceEvent(snapshot, level.getBlockState(pos), player);
 					MinecraftForge.EVENT_BUS.post(event1);
 					return !event1.isCanceled();
 				});
 			} else {
-				PlacementHandler.tryPlaceEntity((ServerPlayer) player, pos, event.getFace(), (pPos, toPlace) -> {
+				success = PlacementHandler.tryPlaceEntity((ServerPlayer) player, pos, event.getFace(), (pPos, toPlace) -> {
 					if (toPlace instanceof Mob mob) {
 						FinalizeSpawn checkSpawn = new FinalizeSpawn(mob, (ServerLevelAccessor) level, pPos.x, pPos.y, pPos.z, level.getCurrentDifficultyAt(new BlockPos((int) pPos.x, (int) pPos.y, (int) pPos.z)), MobSpawnType.EVENT, null, null, null);
 						MinecraftForge.EVENT_BUS.post(checkSpawn);
@@ -109,7 +109,6 @@ public class CommonEvents
 					return true;
 				});
 			}
-			success = true;
 		}
 
 		if (success) {

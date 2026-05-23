@@ -105,11 +105,11 @@ public class FabricPlatformHelper implements IPlatformHelper {
     @Override
     public CarryOnData getCarryData(Player player) {
         if (player == null) {
-            return new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            return CarryOnData.empty();
         }
         CarryOnData data = player.getAttachedOrCreate(CarryOnFabricMod.CARRY_ON_DATA_ATTACHMENT_TYPE);
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
             player.setAttached(CarryOnFabricMod.CARRY_ON_DATA_ATTACHMENT_TYPE, data);
         }
         return data.clone();
@@ -121,7 +121,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
             return;
         }
         if (data == null) {
-            data = new CarryOnData(new net.minecraft.nbt.CompoundTag());
+            data = CarryOnData.empty();
         }
         player.setAttached(CarryOnFabricMod.CARRY_ON_DATA_ATTACHMENT_TYPE, data);
         if(!player.level().isClientSide) {

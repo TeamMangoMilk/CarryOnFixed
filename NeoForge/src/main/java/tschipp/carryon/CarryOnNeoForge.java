@@ -20,7 +20,6 @@
 
 package tschipp.carryon;
 
-import net.minecraft.nbt.CompoundTag;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -41,7 +40,7 @@ public class CarryOnNeoForge {
 
     public static final Supplier<AttachmentType<CarryOnData>> CARRY_ON_DATA_ATTACHMENT = ATTACHMENT_TYPES.register(
             "carry_on_data",
-            () -> AttachmentType.builder(() -> new CarryOnData(new CompoundTag()))
+            () -> AttachmentType.builder(CarryOnData::empty)
                     //.sync(new CarryOnDataSyncHandler())
                     //.serialize(CarryOnData.CODEC.fieldOf(CarryOnData.SERIALIZATION_KEY))
                     .serialize(CarryOnData.CODEC)
