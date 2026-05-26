@@ -16,6 +16,8 @@ public record ClientboundSyncCarryDataPacket(int iden, CarryOnData data) impleme
     public ClientboundSyncCarryDataPacket {
         if (data == null) {
             data = CarryOnData.empty();
+        } else {
+            data = data.clone();
         }
     }
 

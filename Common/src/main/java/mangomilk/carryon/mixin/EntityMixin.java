@@ -20,7 +20,6 @@
 
 package mangomilk.carryon.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -35,14 +34,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import mangomilk.carryon.Constants;
 import mangomilk.carryon.common.carry.CarryOnData;
 import mangomilk.carryon.common.carry.CarryOnData.CarryType;
 import mangomilk.carryon.common.carry.CarryOnDataManager;
-import mangomilk.carryon.networking.clientbound.ClientboundStartRidingPacket;
-import mangomilk.carryon.networking.clientbound.ClientboundStartRidingOtherPlayerPacket;
+import mangomilk.carryon.common.carry.PlacementHandler;
 import mangomilk.carryon.CarryOnCommon;
-import mangomilk.carryon.platform.Services;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin
@@ -106,22 +102,9 @@ public abstract class EntityMixin
 	@Inject(method = "getDismountLocationForPassenger(Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"))
 	private void onDismountPassenger(LivingEntity living, CallbackInfoReturnable<Vec3> cir)
 	{
-		if((Object)this instanceof Player thisPlayer && living instanceof Player otherPlayer)
+		if((Object)this instanceof ServerPlayer carrier && living instanceof Player otherPlayer)
 		{
-			CarryOnData carry = CarryOnDataManager.getCarryData(thisPlayer);
-			boolean wasCarrying = carry.isCarrying(CarryType.PLAYER);
-			if(wasCarrying)
-			{
-				carry.clear();
-				CarryOnDataManager.setCarryData(thisPlayer, carry);
-			}
-			if (thisPlayer instanceof ServerPlayer serverPlayer) {
-				Services.PLATFORM.sendPacketToPlayer(Constants.PACKET_ID_START_RIDING, new ClientboundStartRidingPacket(otherPlayer.getId(), false), serverPlayer);
-				Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(serverPlayer.getId(), otherPlayer.getId(), false), serverPlayer.serverLevel());
-				if (wasCarrying && (!serverPlayer.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)) {
-					serverPlayer.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
-				}
-			}
+			PlacementHandler.releaseCarriedPlayer(carrier, otherPlayer, null, false);
 		}
 	}
 

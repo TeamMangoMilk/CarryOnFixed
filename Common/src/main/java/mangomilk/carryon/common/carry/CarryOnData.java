@@ -64,7 +64,7 @@ public class CarryOnData {
             },
             carry -> {
                 try {
-                    return DataResult.success(carry.getNbt());
+                    return DataResult.success(carry.copyNbt());
                 } catch (Exception e) {
                     return DataResult.error(e::getMessage);
                 }
@@ -72,7 +72,7 @@ public class CarryOnData {
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CarryOnData> STREAM_CODEC = StreamCodec.of(
-            (buf, carry) -> ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, carry.getNbt()),
+            (buf, carry) -> ByteBufCodecs.TRUSTED_COMPOUND_TAG.encode(buf, carry.copyNbt()),
             buf -> new CarryOnData(ByteBufCodecs.TRUSTED_COMPOUND_TAG.decode(buf))
     );
 
@@ -101,15 +101,22 @@ public class CarryOnData {
 
     public CompoundTag getNbt()
     {
-        nbt.putString("type", type.toString());
-        nbt.putBoolean("keyPressed", keyPressed);
-        Optional<Tag> encodedScript = encodeActiveScript();
-        if(encodedScript.isPresent())
-            nbt.put("activeScript", encodedScript.get());
-        else
-            nbt.remove("activeScript");
-        nbt.putInt("selected", this.selectedSlot);
+        nbt = copyNbt();
         return nbt;
+    }
+
+    public CompoundTag copyNbt()
+    {
+        CompoundTag snapshot = nbt.copy();
+        snapshot.putString("type", type.toString());
+        snapshot.putBoolean("keyPressed", keyPressed);
+        Optional<Tag> encodedScript = encodeActiveScriptSnapshot();
+        if(encodedScript.isPresent())
+            snapshot.put("activeScript", encodedScript.get());
+        else
+            snapshot.remove("activeScript");
+        snapshot.putInt("selected", this.selectedSlot);
+        return snapshot;
     }
 
     public CompoundTag getContentNbt()
@@ -209,15 +216,12 @@ public class CarryOnData {
                 .orElse(null);
     }
 
-    private Optional<Tag> encodeActiveScript() {
+    private Optional<Tag> encodeActiveScriptSnapshot() {
         if(activeScript == null)
             return Optional.empty();
 
-        Optional<Tag> encoded = CarryOnScript.CODEC.encodeStart(NbtOps.INSTANCE, activeScript)
-                .resultOrPartial(message -> Constants.LOG.warn("Failed to encode CarryOnRevamped active script, dropping it: {}", message));
-        if(encoded.isEmpty())
-            activeScript = null;
-        return encoded;
+        return CarryOnScript.CODEC.encodeStart(NbtOps.INSTANCE, activeScript)
+                .resultOrPartial(message -> Constants.LOG.warn("Failed to encode CarryOnRevamped active script, dropping it from sync snapshot: {}", message));
     }
 
     public Optional<CarryOnScript> getActiveScript()
@@ -269,7 +273,7 @@ public class CarryOnData {
     }
 
     public CarryOnData clone() {
-        return new CarryOnData(nbt.copy());
+        return new CarryOnData(copyNbt());
     }
 
     public int getTick()

@@ -31,6 +31,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.GameRules;
@@ -202,14 +203,11 @@ public class PlacementHandler
 				playFailSound(level, player);
 				return false;
 			}
-			player.ejectPassengers();
-			Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(player.getId(), otherPlayer.getId(), false), player.serverLevel());
-			carry.clear();
-			CarryOnDataManager.setCarryData(player, carry);
-            otherPlayer.teleportTo(placementPos.x, placementPos.y, placementPos.z);
+			if (!releaseCarriedPlayer(player, otherPlayer, placementPos, true)) {
+				playFailSound(level, player);
+				return false;
+			}
 			player.swing(InteractionHand.MAIN_HAND, true);
-			if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
-				player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
 			return true;
 		}
 
@@ -373,13 +371,41 @@ public class PlacementHandler
 				}
 			}
 		} else if (carry.isCarrying(CarryType.PLAYER)) {
-			player.ejectPassengers();
+			Entity otherPlayer = player.getFirstPassenger();
+			if (otherPlayer != null && releaseCarriedPlayer(player, otherPlayer, player.position(), true))
+				return;
 		}
 		carry.clear();
 		CarryOnDataManager.setCarryData(player, carry);
 		if (!player.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative) {
 			player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
 		}
+	}
+
+	public static boolean releaseCarriedPlayer(ServerPlayer carrier, Entity carriedPlayer, @Nullable Vec3 placementPos, boolean detachPassenger)
+	{
+		if (!(carriedPlayer instanceof Player) || !carrier.hasPassenger(carriedPlayer))
+			return false;
+
+		CarryOnData carry = CarryOnDataManager.getCarryData(carrier);
+		if (!carry.isCarrying(CarryType.PLAYER))
+			return false;
+
+		carry.clear();
+		CarryOnDataManager.setCarryData(carrier, carry);
+
+		if (detachPassenger && carriedPlayer.getVehicle() == carrier)
+			carriedPlayer.stopRiding();
+
+		if (placementPos != null)
+			carriedPlayer.teleportTo(placementPos.x, placementPos.y, placementPos.z);
+
+		Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(carrier.getId(), carriedPlayer.getId(), false), carrier.serverLevel());
+
+		if (!carrier.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
+			carrier.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+
+		return true;
 	}
 
 	private static BlockPos getDeathPlacementPos(BlockState state, ServerPlayer player)
