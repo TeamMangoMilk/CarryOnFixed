@@ -22,6 +22,7 @@ package mangomilk.carryon.events;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -147,6 +148,10 @@ public class CommonEvents {
         ServerPlayerEvents.COPY_FROM.register(((oldPlayer, newPlayer, alive) -> {
             PlacementHandler.placeCarriedOnDeath(oldPlayer, newPlayer, !alive);
         }));
+
+        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
+            CarryOnCommon.onPlayerChangedDimension(player);
+        });
 
 
         PlayerBlockBreakEvents.BEFORE.register(((world, player, pos, state, blockEntity) -> {

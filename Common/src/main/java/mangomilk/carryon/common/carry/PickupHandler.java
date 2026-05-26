@@ -257,7 +257,7 @@ public class PickupHandler {
 
             otherPlayer.startRiding(player, true);
             Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(player.getId(), otherPlayer.getId(), true), (ServerLevel) player.level());
-            carry.setCarryingPlayer();
+            carry.setCarryingPlayer(otherPlayer);
             player.swing(InteractionHand.MAIN_HAND, true);
             player.level().playSound(null, player.getOnPos(), SoundEvents.ARMOR_EQUIP_GENERIC.value(), SoundSource.AMBIENT, 1.0f, 0.5f);
             CarryOnDataManager.setCarryData(player, carry);

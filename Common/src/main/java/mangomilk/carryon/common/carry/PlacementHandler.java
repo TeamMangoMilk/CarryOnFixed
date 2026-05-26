@@ -384,11 +384,13 @@ public class PlacementHandler
 
 	public static boolean releaseCarriedPlayer(ServerPlayer carrier, Entity carriedPlayer, @Nullable Vec3 placementPos, boolean detachPassenger)
 	{
-		if (!(carriedPlayer instanceof Player) || !carrier.hasPassenger(carriedPlayer))
+		if (!(carriedPlayer instanceof Player player))
 			return false;
 
 		CarryOnData carry = CarryOnDataManager.getCarryData(carrier);
 		if (!carry.isCarrying(CarryType.PLAYER))
+			return false;
+		if (!carrier.hasPassenger(carriedPlayer) && carry.getCarriedPlayerUuid().filter(player.getUUID()::equals).isEmpty())
 			return false;
 
 		carry.clear();

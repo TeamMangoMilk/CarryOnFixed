@@ -32,6 +32,8 @@ This fork introduces critical stabilisations, gameplay improvements, and safety 
 *   **Placement Cooldowns:** Prevents players from instantly re-picking up a player, mob, or block entity immediately after putting them down, avoiding annoying recursive pick-up/place loops if interaction keys are held.
 *   **Cycle-Safe Loop Guards:** Implements strict cyclic safety checks and loop guards to prevent recursive player passenger stack loops, avoiding instant stack overflows and server freezes.
 *   **Carried Data Recovery:** Hardens the mod's recovery systems to safely restore carried data and prevent crashes or item losses on world reload.
+*   **Carried Player Release Sync:** Centralises carried-player release handling so being put down or shift-dismounting clears the carrier state, passenger state, slowness effect, and multiplayer riding sync consistently without duplicate release packets.
+*   **Portal Carry Recovery:** Tracks carried player UUIDs across dimension changes and reattaches carried players after Nether portal travel when both players arrive in the destination dimension, while clearing stale invisible carry states if recovery fails.
 *   **Slowness Debuff Fixes:** Resolves persistent slowness debuff bugs that originally occurred during player dismounting, stacking, or manually clearing carried states.
 *   **Non-OP Recovery Command:** Allows non-operator players to execute the `/carryon place` command on themselves to safely place down a carried object if their state gets stuck.
 
@@ -44,6 +46,7 @@ This fork introduces critical stabilisations, gameplay improvements, and safety 
 *   **The Original Mod Issue:** The original mod frequently crashed during network updates due to a lack of null-safety, inverted player-tracking mappings, and unhandled exceptions during capability serialization. Simple actions like picking up objects, placing, dismounting, or player tracking updates would throw `NullPointerException` or `ClassCastException` and crash the server or client. Furthermore, synchronising carried container blocks containing complex custom NBT data frequently exceeded standard network packet limits, throwing `EncoderException` and disconnecting players.
 *   **Our Solution:** Overhauled the network serialization, capability, and tracking layers to implement strict null-safety and cast guards, alongside Minecraft's native registry-free **`ByteBufCodecs.TRUSTED_COMPOUND_TAG`**.
     *   Adds comprehensive null-safety checks during player tracking and capability serialization to eliminate persistent NPEs and cast exceptions.
+    *   Snapshots carried data before custom payload encoding and platform storage to prevent release-time state mutation from corrupting multiplayer sync packets.
     *   Bypasses standard NBT size limit constraints (such as the default 2MB heap allocation tracker), allowing massive custom container payloads to synchronise safely in multiplayer.
     *   Natively utilises Minecraft's network-level packet compression (Zlib), ensuring 100% thread safety, lightweight packet processing, and no event-loop freezes or memory leaks.
 
@@ -86,7 +89,7 @@ To compile and package release-ready JARs for all loaders:
 2. Run the Gradle build command:
    ```powershell
    # Windows PowerShell
-   $env:JAVA_HOME="C:\Program Files\Android\openjdk\jdk-21.0.8" # Replace with your JDK 21 path
+   $env:JAVA_HOME="C:\Path\To\Your\JDK-21"
    .\gradlew.bat clean build
    ```
 3. The newly generated, version-stamped binaries will be packaged and stored in the central `build_jars/` folder:

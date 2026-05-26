@@ -275,6 +275,12 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
+	public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+		if(event.getEntity() instanceof ServerPlayer player)
+			CarryOnCommon.onPlayerChangedDimension(player);
+	}
+
+	@SubscribeEvent
 	public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
 		if (event.getObject() instanceof Player player) {
 			event.addCapability(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "carry_on_data"), new CarryOnDataCapabilityProvider());

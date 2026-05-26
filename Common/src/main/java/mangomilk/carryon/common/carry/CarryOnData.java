@@ -35,6 +35,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.AreaEffectCloud;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,6 +45,7 @@ import mangomilk.carryon.common.scripting.CarryOnScript;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.UUID;
 
 public class CarryOnData {
 
@@ -238,6 +240,24 @@ public class CarryOnData {
 
     public void setCarryingPlayer() {
         this.type = CarryType.PLAYER;
+        this.nbt.remove("carriedPlayer");
+    }
+
+    public void setCarryingPlayer(Player player) {
+        this.type = CarryType.PLAYER;
+        this.nbt.putString("carriedPlayer", player.getUUID().toString());
+    }
+
+    public Optional<UUID> getCarriedPlayerUuid() {
+        if(!nbt.contains("carriedPlayer"))
+            return Optional.empty();
+
+        try {
+            return Optional.of(UUID.fromString(nbt.getString("carriedPlayer")));
+        } catch (IllegalArgumentException e) {
+            Constants.LOG.warn("Invalid carried player UUID '{}', ignoring it", nbt.getString("carriedPlayer"));
+            return Optional.empty();
+        }
     }
 
     public boolean isCarrying()

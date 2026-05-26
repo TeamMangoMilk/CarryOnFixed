@@ -46,9 +46,15 @@ import mangomilk.carryon.networking.clientbound.ClientboundSyncScriptsPacket;
 import mangomilk.carryon.networking.serverbound.ServerboundCarryKeyPressedPacket;
 import mangomilk.carryon.platform.Services;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class CarryOnCommon
 {
 	public static final RegistrySetBuilder BUILDER = new RegistrySetBuilder();
+	private static final int PLAYER_PORTAL_REATTACH_TICKS = 100;
+	private static final Map<UUID, PendingPlayerCarryPortalTransfer> PENDING_PLAYER_PORTAL_TRANSFERS = new HashMap<>();
 
 	public static HolderLookup.Provider createLookup() {
 		RegistryAccess.Frozen registryaccess$frozen = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
@@ -116,9 +122,16 @@ public class CarryOnCommon
 
 	public static void onCarryTick(ServerPlayer player)
 	{
+		processPendingPlayerPortalTransfer(player);
+
 	    CarryOnData carry = CarryOnDataManager.getCarryData(player);
 	    if(carry.isCarrying())
 	    {
+			if(carry.isCarrying(CarryType.PLAYER) && player.getFirstPassenger() == null) {
+				if(!PENDING_PLAYER_PORTAL_TRANSFERS.containsKey(player.getUUID()))
+					clearStalePlayerCarry(player, carry);
+			}
+
 			//Dirty Hack to sync carry data 1 tick after respawning
 			if(player.tickCount == 1)
 				CarryOnDataManager.setCarryData(player, carry);
@@ -191,6 +204,65 @@ public class CarryOnCommon
 		}
 	}
 
+	public static void onPlayerChangedDimension(ServerPlayer player)
+	{
+		CarryOnData ownCarry = CarryOnDataManager.getCarryData(player);
+		if(ownCarry.isCarrying(CarryType.PLAYER)) {
+			ownCarry.getCarriedPlayerUuid().ifPresent(uuid -> PENDING_PLAYER_PORTAL_TRANSFERS.put(player.getUUID(), new PendingPlayerCarryPortalTransfer(uuid, PLAYER_PORTAL_REATTACH_TICKS)));
+		}
+
+		for(ServerPlayer carrier : player.getServer().getPlayerList().getPlayers()) {
+			if(carrier == player)
+				continue;
+
+			CarryOnData carrierCarry = CarryOnDataManager.getCarryData(carrier);
+			if(carrierCarry.isCarrying(CarryType.PLAYER) && carrierCarry.getCarriedPlayerUuid().filter(player.getUUID()::equals).isPresent()) {
+				PENDING_PLAYER_PORTAL_TRANSFERS.put(carrier.getUUID(), new PendingPlayerCarryPortalTransfer(player.getUUID(), PLAYER_PORTAL_REATTACH_TICKS));
+			}
+		}
+	}
+
+	private static void processPendingPlayerPortalTransfer(ServerPlayer carrier)
+	{
+		PendingPlayerCarryPortalTransfer pending = PENDING_PLAYER_PORTAL_TRANSFERS.get(carrier.getUUID());
+		if(pending == null)
+			return;
+
+		CarryOnData carry = CarryOnDataManager.getCarryData(carrier);
+		if(!carry.isCarrying(CarryType.PLAYER)) {
+			PENDING_PLAYER_PORTAL_TRANSFERS.remove(carrier.getUUID());
+			return;
+		}
+
+		ServerPlayer carriedPlayer = carrier.getServer().getPlayerList().getPlayer(pending.carriedPlayerUuid());
+		if(carriedPlayer != null && carriedPlayer != carrier && carriedPlayer.level() == carrier.level()) {
+			if(carriedPlayer.getVehicle() != carrier) {
+				if(carriedPlayer.isPassenger())
+					carriedPlayer.stopRiding();
+				carriedPlayer.teleportTo(carrier.getX(), carrier.getY(), carrier.getZ());
+				carriedPlayer.startRiding(carrier, true);
+				Services.PLATFORM.sendPacketToAllPlayers(Constants.PACKET_ID_START_RIDING_OTHER, new ClientboundStartRidingOtherPlayerPacket(carrier.getId(), carriedPlayer.getId(), true), carrier.serverLevel());
+			}
+			PENDING_PLAYER_PORTAL_TRANSFERS.remove(carrier.getUUID());
+			return;
+		}
+
+		if(pending.remainingTicks() <= 0) {
+			clearStalePlayerCarry(carrier, carry);
+			PENDING_PLAYER_PORTAL_TRANSFERS.remove(carrier.getUUID());
+		} else {
+			PENDING_PLAYER_PORTAL_TRANSFERS.put(carrier.getUUID(), new PendingPlayerCarryPortalTransfer(pending.carriedPlayerUuid(), pending.remainingTicks() - 1));
+		}
+	}
+
+	private static void clearStalePlayerCarry(ServerPlayer carrier, CarryOnData carry)
+	{
+		carry.clear();
+		CarryOnDataManager.setCarryData(carrier, carry);
+		if (!carrier.isCreative() || Constants.COMMON_CONFIG.settings.slownessInCreative)
+			carrier.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+	}
+
 
 	public static int potionLevel(CarryOnData carry, Level level)
 	{
@@ -251,4 +323,6 @@ public class CarryOnCommon
 		}
 		return false;
 	}
+
+	private record PendingPlayerCarryPortalTransfer(UUID carriedPlayerUuid, int remainingTicks) {}
 }
