@@ -159,8 +159,6 @@ public class CarryRenderHelper
 
 	public static void applyBlockTransformations(Player player, float partialticks, PoseStack matrix, Block block)
 	{
-		int perspective = CarryRenderHelper.getPerspective();
-
 		applyGeneralTransformations(player, partialticks, matrix);
 
 		if (Constants.CLIENT_CONFIG.facePlayer != CarryRenderHelper.isChest(block))

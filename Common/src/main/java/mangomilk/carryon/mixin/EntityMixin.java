@@ -111,7 +111,7 @@ public abstract class EntityMixin
 	@Inject(method = "onPassengerTurned(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"))
 	private void onPassengerTurned(Entity toUpdate, CallbackInfo ci)
 	{
-		if((Object)this instanceof Player thisPlayer && toUpdate instanceof Player otherPlayer)
+		if((Object)this instanceof Player thisPlayer && toUpdate instanceof Player)
 		{
 			CarryOnData carry = CarryOnDataManager.getCarryData(thisPlayer);
 			if(carry.isCarrying(CarryType.PLAYER)) {

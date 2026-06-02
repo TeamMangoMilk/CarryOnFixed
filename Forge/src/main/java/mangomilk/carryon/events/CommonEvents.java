@@ -282,7 +282,7 @@ public class CommonEvents
 
 	@SubscribeEvent
 	public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-		if (event.getObject() instanceof Player player) {
+		if (event.getObject() instanceof Player) {
 			event.addCapability(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "carry_on_data"), new CarryOnDataCapabilityProvider());
 		}
 	}

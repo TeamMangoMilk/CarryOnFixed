@@ -40,13 +40,13 @@ public class ArchitecturyCompat {
 
     private static void setup( ) {
         try {
-            Class BlockEvent = Class.forName("dev.architectury.event.events.common.BlockEvent");
+            Class<?> BlockEvent = Class.forName("dev.architectury.event.events.common.BlockEvent");
             Field PLACE = BlockEvent.getField("PLACE");
             Method invoker = Class.forName("dev.architectury.event.Event").getMethod("invoker");
             INVOKER_INSTANCE = invoker.invoke(PLACE.get(BlockEvent));
-            Class PlaceClass = Class.forName("dev.architectury.event.events.common.BlockEvent$Place");
+            Class<?> PlaceClass = Class.forName("dev.architectury.event.events.common.BlockEvent$Place");
             PLACE_BLOCK = PlaceClass.getMethod("placeBlock", Level.class, BlockPos.class, BlockState.class, Entity.class);
-            Class EventResult = Class.forName("dev.architectury.event.EventResult");
+            Class<?> EventResult = Class.forName("dev.architectury.event.EventResult");
             IS_FALSE = EventResult.getMethod("isFalse");
 
         } catch (Exception e) {

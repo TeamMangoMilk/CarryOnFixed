@@ -43,18 +43,12 @@ public class ModelOverride
 {
 	//public static Codec<ModelOverride> CODEC = Codec.STRING.comapFlatMap(ModelOverride::of, override -> override.raw);
 
-	private String raw;
 	private BlockResult parsedBlock;
-	private Type type;
-	private Either<ItemResult, BlockResult> parsedRHS;
 	private Either<ItemStack, BlockState> renderObject;
 
 	private ModelOverride(String raw, BlockResult parsedBlock, Type type, Either<ItemResult, BlockResult> parsedRHS)
 	{
-		this.raw = raw;
 		this.parsedBlock = parsedBlock;
-		this.type = type;
-		this.parsedRHS = parsedRHS;
 
 		parsedRHS.ifLeft(res -> {
 			ItemStack stack = new ItemStack(res.item());

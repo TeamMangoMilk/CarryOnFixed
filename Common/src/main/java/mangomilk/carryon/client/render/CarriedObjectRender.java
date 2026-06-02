@@ -29,7 +29,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
@@ -270,10 +269,10 @@ public class CarriedObjectRender
 		}
 		buffer.endLastBatch();
 
-		buffer.endBatch(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS));
-		buffer.endBatch(RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS));
-		buffer.endBatch(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
-		buffer.endBatch(RenderType.entitySmoothCutout(TextureAtlas.LOCATION_BLOCKS));
+		buffer.endBatch(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
+		buffer.endBatch(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
+		buffer.endBatch(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
+		buffer.endBatch(RenderType.entitySmoothCutout(InventoryMenu.BLOCK_ATLAS));
 
 		RenderSystem.enableDepthTest();
 		RenderSystem.enableCull();

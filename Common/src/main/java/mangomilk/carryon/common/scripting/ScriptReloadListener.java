@@ -37,7 +37,6 @@ import mangomilk.carryon.Constants;
 import mangomilk.carryon.networking.clientbound.ClientboundSyncScriptsPacket;
 import mangomilk.carryon.platform.Services;
 
-import java.util.Collections;
 import java.util.Map;
 
 public class ScriptReloadListener extends SimpleJsonResourceReloadListener

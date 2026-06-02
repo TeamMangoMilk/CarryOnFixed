@@ -119,7 +119,6 @@ public class PlacementHandler
 					Constants.LOG.error("Failed to restore block entity data at {}", pos, e);
 				}
 			} else {
-				blockEntity.setBlockState(state);
 				level.setBlockEntity(blockEntity);
 			}
 		}
@@ -366,7 +365,6 @@ public class PlacementHandler
 						Constants.LOG.error("Failed to restore block entity data on death at {}", pos, e);
 					}
 				} else {
-					blockEntity.setBlockState(state);
 					player.level().setBlockEntity(blockEntity);
 				}
 			}
@@ -479,7 +477,7 @@ public class PlacementHandler
 	{
 		if (!Double.isFinite(placementPos.x) || !Double.isFinite(placementPos.y) || !Double.isFinite(placementPos.z))
 			return false;
-		if (level.isOutsideBuildHeight(pos) || !level.hasChunkAt(pos))
+		if (level.isOutsideBuildHeight(pos) || !level.getChunkSource().hasChunk(pos.getX() >> 4, pos.getZ() >> 4))
 			return false;
 
 		AABB unsafeTargetSearchArea = AABB.ofSize(placementPos, 2.0D, 2.0D, 2.0D);
