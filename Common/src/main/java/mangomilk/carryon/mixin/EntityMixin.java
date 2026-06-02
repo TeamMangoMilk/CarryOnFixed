@@ -76,7 +76,7 @@ public abstract class EntityMixin
 			{
 				double height = thisPlayer.getBbHeight();
 				if (entity instanceof Player) {
-					height -= 0.7;
+					height -= 0.5;
 				}
 				if (thisPlayer.isShiftKeyDown() || thisPlayer.isCrouching()) {
 					height -= 0.25;
